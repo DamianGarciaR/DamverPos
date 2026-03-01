@@ -1,11 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { firebaseApp } from '../firebase'; // Asegúrate que esta ruta es correcta
+import { getFunctions, httpsCallable, HttpsCallableResult } from "firebase/functions";
+import { firebaseApp } from '../firebase'; 
 
 const functions = getFunctions(firebaseApp);
-const createNewUser = httpsCallable(functions, 'createNewUser');
+
+// 1. Definimos la estructura de la respuesta de la función
+interface CreateUserResult {
+  status: 'success' | 'error';
+  userId?: string;
+  message?: string;
+}
+
+// 2. Le decimos a httpsCallable que la respuesta tendrá la forma de CreateUserResult
+const createNewUser = httpsCallable<any, CreateUserResult>(functions, 'createNewUser');
 
 export default function UserInvitation() {
   const [email, setEmail] = useState('');
@@ -21,13 +30,14 @@ export default function UserInvitation() {
     setSuccess(null);
 
     try {
-      const result = await createNewUser({ 
+      const result: HttpsCallableResult<CreateUserResult> = await createNewUser({ 
         userEmail: email, 
         userPassword: password, 
         role,
         pointOfSaleId
       });
       
+      // 3. TypeScript ahora sabe que result.data tiene .status, .userId?, y .message?
       if (result.data.status === 'success') {
         setSuccess(`¡Usuario creado con éxito! User ID: ${result.data.userId}`);
         // Limpiar formulario
@@ -35,71 +45,79 @@ export default function UserInvitation() {
         setPassword('');
         setPointOfSaleId('');
       } else {
-        throw new Error('La función no retornó un estado de éxito.');
+        // Si el estado es 'error', usamos el mensaje que nos envía la función
+        setError(result.data.message || 'La función no retornó un estado de éxito.');
       }
 
     } catch (err: any) {
-      console.error("Error al crear el usuario:", err);
-      setError(err.message || "Ocurrió un error desconocido.");
+      console.error("Error al llamar la función:", err);
+      // Este error captura fallos de red o si la función no se puede invocar
+      setError(err.message || "Ocurrió un error desconocido al contactar el servidor.");
     }
   };
 
-  return (
-    <div className="w-full max-w-lg p-8 space-y-6 bg-slate-800 rounded-xl shadow-lg mt-8">
-      <h2 className="text-2xl font-bold text-center text-white">Invitar Nuevo Usuario</h2>
-      
-      {error && <p className="text-red-500 text-center p-3 bg-red-900 rounded-lg">{error}</p>}
-      {success && <p className="text-green-500 text-center p-3 bg-green-900 rounded-lg">{success}</p>}
-
-      <form onSubmit={handleInvitation} className="space-y-6">
-        <div>
-          <label className="block mb-2 text-sm font-medium text-slate-400">Email del Usuario</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-white bg-slate-700 border border-slate-600 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-          />
+    return (
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
+            <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-lg p-8">
+                <h1 className="text-3xl font-bold mb-6 text-center text-indigo-400">Invitar Nuevo Usuario</h1>
+                <form onSubmit={handleInvitation} className="space-y-6">
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-300">Correo Electrónico</label>
+                        <input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-300">Contraseña Temporal</label>
+                        <input
+                            id="password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            minLength={6}
+                            className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="role" className="block text-sm font-medium text-gray-300">Rol</label>
+                        <select
+                            id="role"
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                            required
+                            className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                            <option value="seller">Vendedor</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor="pointOfSaleId" className="block text-sm font-medium text-gray-300">ID del Punto de Venta</label>
+                        <input
+                            id="pointOfSaleId"
+                            type="text"
+                            value={pointOfSaleId}
+                            onChange={(e) => setPointOfSaleId(e.target.value)}
+                            required
+                            className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500"
+                    >
+                        Crear y Enviar Invitación
+                    </button>
+                </form>
+                {error && <p className="mt-4 text-center text-red-400">{error}</p>}
+                {success && <p className="mt-4 text-center text-green-400">{success}</p>}
+            </div>
         </div>
-        <div>
-          <label className="block mb-2 text-sm font-medium text-slate-400">Contraseña Temporal</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-white bg-slate-700 border border-slate-600 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-        <div>
-          <label className="block mb-2 text-sm font-medium text-slate-400">Rol</label>
-          <select 
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full px-3 py-2 text-white bg-slate-700 border border-slate-600 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="seller">Vendedor</option>
-            <option value="supervisor">Supervisor</option>
-          </select>
-        </div>
-        <div>
-          <label className="block mb-2 text-sm font-medium text-slate-400">ID del Punto de Venta</label>
-          <input
-            type="text"
-            value={pointOfSaleId}
-            onChange={(e) => setPointOfSaleId(e.target.value)}
-            required
-            className="w-full px-3 py-2 text-white bg-slate-700 border border-slate-600 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full py-3 font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-800"
-        >
-          Crear Usuario
-        </button>
-      </form>
-    </div>
-  );
+    );
 }
