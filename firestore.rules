@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+    // Checks if the requesting user is authenticated.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    // Checks if the user belongs to the company that owns the resource.
+    function isOwner() {
+      return resource.data.companyId == request.auth.token.companyId;
+    }
+    // Checks if the incoming data is for the user's company.
+    function isCreatingForOwnCompany() {
+      return request.resource.data.companyId == request.auth.token.companyId;
+    }
+    // Checks that the companyId is not being changed.
+    function companyIdIsImmutable() {
+        return request.resource.data.companyId == resource.data.companyId;
+    }
+
+    // --- Collection Rules ---
+    match /companies/{companyId} {
+      allow read: if isSignedIn() && request.auth.token.companyId == companyId;
+      allow write: if false; // Handled by backend/admin
+    }
+
+    match /users/{userId} {
+      allow read, update: if isSignedIn() && request.auth.uid == userId;
+      // Only users from the same company can create a new user (e.g., an admin inviting someone)
+      allow create: if isSignedIn() && isCreatingForOwnCompany();
+    }
+
+    match /products/{productId} {
+      allow read: if isSignedIn() && isOwner();
+      allow create: if isSignedIn() && isCreatingForOwnCompany();
+      allow update: if isSignedIn() && isOwner() && companyIdIsImmutable();
+      allow delete: if isSignedIn() && isOwner();
+    }
+
+    match /customers/{customerId} {
+      allow read: if isSignedIn() && isOwner();
+      allow create: if isSignedIn() && isCreatingForOwnCompany();
+      allow update: if isSignedIn() && isOwner() && companyIdIsImmutable();
+      allow delete: if isSignedIn() && isOwner();
+    }
+  }
+}
