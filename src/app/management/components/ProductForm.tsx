@@ -95,19 +95,19 @@ export default function ProductForm({ product, onClose, companyId }: Props) {
             
             {/* Datos Generales */}
             <div className="p-4 border border-slate-700 rounded-lg space-y-4">
-                <h3 class="text-lg font-semibold text-white">Información General</h3>
+                <h3 className="text-lg font-semibold text-white">Información General</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300">Nombre del Producto</label>
+                        <label className="block text-sm font-medium text-slate-300">Nombre del Producto</label>
                         <input {...register('name', { required: 'El nombre es obligatorio' })} className="mt-1 w-full bg-slate-700 border-slate-600 rounded-md py-2 px-3 text-white" />
-                        {errors.name && <p class="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+                        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-300">SKU (Código principal)</label>
+                        <label className="block text-sm font-medium text-slate-300">SKU (Código principal)</label>
                         <input {...register('sku')} className="mt-1 w-full bg-slate-700 border-slate-600 rounded-md py-2 px-3 text-white" />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-300">Código de Barras</label>
+                        <label className="block text-sm font-medium text-slate-300">Código de Barras</label>
                         <input {...register('barcode')} className="mt-1 w-full bg-slate-700 border-slate-600 rounded-md py-2 px-3 text-white" />
                     </div>
                      <div className="flex items-center space-x-4">
@@ -127,7 +127,7 @@ export default function ProductForm({ product, onClose, companyId }: Props) {
 
             {/* Variantes y Stock */}
             <div className="p-4 border border-slate-700 rounded-lg space-y-4">
-                <h3 class="text-lg font-semibold text-white">Variantes y Stock</h3>
+                <h3 className="text-lg font-semibold text-white">Variantes y Stock</h3>
                 {variantFields.map((field, index) => (
                     <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 bg-slate-900 rounded-md relative">
                         <input type="text" placeholder="Nombre (ej. Rojo, L)" {...register(`variants.${index}.name`, { required: true })} className="md:col-span-2 w-full bg-slate-700 border-slate-600 rounded-md py-2 px-3 text-white" />
@@ -142,15 +142,15 @@ export default function ProductForm({ product, onClose, companyId }: Props) {
 
             {/* Precios y Costo */}
             <div className="p-4 border border-slate-700 rounded-lg space-y-4">
-                 <h3 class="text-lg font-semibold text-white">Precios y Costos</h3>
-                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <h3 className="text-lg font-semibold text-white">Precios y Costos</h3>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300">Costo</label>
+                        <label className="block text-sm font-medium text-slate-300">Costo</label>
                         <input type="number" step="0.01" {...register('cost')} className="mt-1 w-full bg-slate-700 border-slate-600 rounded-md py-2 px-3 text-white" />
                     </div>
                  </div>
                  <div className="space-y-3 mt-4">
-                    <h4 class="text-md font-semibold text-slate-200">Listas de Precios</h4>
+                    <h4 className="text-md font-semibold text-slate-200">Listas de Precios</h4>
                     {priceListFields.map((field, index) => {
                          const cost = watch('cost') || 0;
                          const price = watch(`priceLists.${index}.price`) || 0;
@@ -160,10 +160,10 @@ export default function ProductForm({ product, onClose, companyId }: Props) {
                             <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-slate-900 rounded-md relative">
                                 <input placeholder="Nombre Lista" {...register(`priceLists.${index}.name`, { required: true })} className="md:col-span-2 w-full bg-slate-700 border-slate-600 rounded-md py-2 px-3 text-white" />
                                 <div className='relative'>
-                                   <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">$</span>
+                                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">$</span>
                                    <input type="number" step="0.01" placeholder="Precio" {...register(`priceLists.${index}.price`)} className="w-full pl-7 bg-slate-700 border-slate-600 rounded-md py-2 px-3 text-white" />
                                 </div>
-                               <div class="flex items-center justify-center text-sm text-slate-300">
+                               <div className="flex items-center justify-center text-sm text-slate-300">
                                     <span>Margen: {margin.toFixed(2)}%</span>
                                 </div>
                                 {priceListFields.length > 1 && <button type="button" onClick={() => removePriceList(index)} className="absolute -top-2 -right-2 text-white bg-red-600 rounded-full h-6 w-6 flex items-center justify-center font-bold">X</button>}
